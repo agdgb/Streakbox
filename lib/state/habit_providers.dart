@@ -233,3 +233,16 @@ final monthlyCompletionRateProvider = Provider<double>((ref) {
     lastDayOfMonth,
   );
 });
+
+/// Dual-Metric 30-Day Consistency Score & Recovery Protocol status for active habit.
+final consistencyMetricsProvider = Provider<ConsistencyMetrics>((ref) {
+  final entriesAsync = ref.watch(selectedHabitEntriesProvider);
+  final entries = entriesAsync.asData?.value ?? {};
+  final selectedHabit = ref.watch(selectedHabitProvider);
+
+  return AppDateUtils.calculateConsistencyMetrics(
+    entries,
+    habitCreatedAt: selectedHabit?.createdAt,
+    windowDays: 30,
+  );
+});

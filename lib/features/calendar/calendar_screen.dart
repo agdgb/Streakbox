@@ -13,6 +13,7 @@ import '../habits/habit_tabs.dart';
 import '../social_share/social_share_sheet.dart';
 import 'widgets/month_grid.dart';
 import 'widgets/month_header.dart';
+import 'widgets/recovery_protocol_card.dart';
 
 /// Main Calendar and Habit tracking screen.
 class CalendarScreen extends ConsumerWidget {
@@ -28,6 +29,7 @@ class CalendarScreen extends ConsumerWidget {
     final selectedHabit = ref.watch(selectedHabitProvider);
     final currentStreak = ref.watch(currentStreakProvider);
     final bestStreak = ref.watch(bestStreakProvider);
+    final consistency = ref.watch(consistencyMetricsProvider);
     final themePreset = ref.watch(themePresetProvider);
     final isDark = themePreset.isDark;
 
@@ -97,6 +99,9 @@ class CalendarScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
 
+                // 🛡️ Recovery Protocol Banner (Active when yesterday was missed)
+                const RecoveryProtocolCard(),
+
                 // Calendar Container Card
                 Container(
                   decoration: themePreset.neumorphicCard(radius: 20),
@@ -112,38 +117,48 @@ class CalendarScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
-                // Live Streaks Quick Metrics Card (Current & Best Streak)
+                // Live Anti-Fragility Metrics Card (Streak, Consistency Rating, Best Streak)
                 if (selectedHabit != null) ...[
                   Container(
                     decoration: themePreset.neumorphicCard(radius: 18),
-                    padding: AppSpacing.paddingMd,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
                     child: Row(
                       children: [
                         Expanded(
                           child: _buildMetricItem(
                             context,
-                            title: 'Current Streak',
-                            value:
-                                '$currentStreak ${currentStreak == 1 ? "Day" : "Days"}',
+                            title: 'Streak',
+                            value: '$currentStreak d',
                             icon: Icons.local_fire_department_rounded,
-                            accentColor: themePreset.primaryColor,
+                            accentColor: const Color(0xFFFF4B72),
                           ),
                         ),
                         Container(
                           width: 1,
-                          height: 48,
-                          color: isDark
-                              ? themePreset.borderColor
-                              : AppColors.lightBorder,
+                          height: 44,
+                          color: isDark ? themePreset.borderColor : AppColors.lightBorder,
                         ),
                         Expanded(
                           child: _buildMetricItem(
                             context,
-                            title: 'Best Streak',
-                            value:
-                                '$bestStreak ${bestStreak == 1 ? "Day" : "Days"}',
+                            title: 'Consistency',
+                            value: consistency.formattedPercentage,
+                            icon: Icons.shield_rounded,
+                            accentColor: const Color(0xFF10B981),
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 44,
+                          color: isDark ? themePreset.borderColor : AppColors.lightBorder,
+                        ),
+                        Expanded(
+                          child: _buildMetricItem(
+                            context,
+                            title: 'Best',
+                            value: '$bestStreak d',
                             icon: Icons.emoji_events_rounded,
-                            accentColor: themePreset.primaryColor,
+                            accentColor: const Color(0xFFF59E0B),
                           ),
                         ),
                       ],

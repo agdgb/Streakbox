@@ -234,4 +234,88 @@ class AppDateUtils {
 
     return (completedCount / totalDays).clamp(0.0, 1.0);
   }
+
+  /// Calculates the Dual-Metric Consistency Rating (30-day/90-day window)
+  /// and detects whether the "Never Miss Twice" Recovery Protocol should be active.
+  static ConsistencyMetrics calculateConsistencyMetrics(
+    Set<String> entryDateKeys, {
+    DateTime? today,
+    int windowDays = 30,
+    DateTime? habitCreatedAt,
+  }) {
+    final referenceToday = startOfDay(today ?? DateTime.now());
+    final todayKey = formatDateKey(referenceToday);
+    final yesterday = referenceToday.subtract(const Duration(days: 1));
+    final yesterdayKey = formatDateKey(yesterday);
+
+    final isTodayChecked = entryDateKeys.contains(todayKey);
+    final isYesterdayChecked = entryDateKeys.contains(yesterdayKey);
+
+    // Determine the evaluation window start date
+    DateTime windowStart = referenceToday.subtract(Duration(days: windowDays - 1));
+    if (habitCreatedAt != null) {
+      final habitStart = startOfDay(habitCreatedAt);
+      if (habitStart.isAfter(windowStart)) {
+        windowStart = habitStart;
+      }
+    }
+
+    final totalTargetDays = referenceToday.difference(windowStart).inDays + 1;
+    int completedCount = 0;
+    DateTime cursor = windowStart;
+
+    while (!cursor.isAfter(referenceToday)) {
+      final key = formatDateKey(cursor);
+      if (entryDateKeys.contains(key)) {
+        completedCount++;
+      }
+      cursor = cursor.add(const Duration(days: 1));
+    }
+
+    final percentage = totalTargetDays > 0
+        ? ((completedCount / totalTargetDays) * 100.0).clamp(0.0, 100.0)
+        : 100.0;
+
+    // Recovery mode is active when yesterday was missed and today hasn't been completed yet
+    // OR if user had a previous streak and missed yesterday
+    final isRecoveryActive = !isTodayChecked && !isYesterdayChecked && entryDateKeys.isNotEmpty;
+
+    return ConsistencyMetrics(
+      completedDays: completedCount,
+      totalDays: totalTargetDays,
+      percentage: percentage,
+      isRecoveryModeActive: isRecoveryActive,
+      isTodayCompleted: isTodayChecked,
+      isYesterdayCompleted: isYesterdayChecked,
+    );
+  }
+}
+
+/// Structured consistency metrics for habit anti-fragility.
+class ConsistencyMetrics {
+  final int completedDays;
+  final int totalDays;
+  final double percentage;
+  final bool isRecoveryModeActive;
+  final bool isTodayCompleted;
+  final bool isYesterdayCompleted;
+
+  const ConsistencyMetrics({
+    required this.completedDays,
+    required this.totalDays,
+    required this.percentage,
+    required this.isRecoveryModeActive,
+    required this.isTodayCompleted,
+    required this.isYesterdayCompleted,
+  });
+
+  String get formattedPercentage => '${percentage.toStringAsFixed(1)}%';
+
+  String get gradeLabel {
+    if (percentage >= 95.0) return 'LEGENDARY';
+    if (percentage >= 85.0) return 'ELITE';
+    if (percentage >= 75.0) return 'STRONG';
+    if (percentage >= 60.0) return 'STEADY';
+    return 'BUILDING';
+  }
 }
