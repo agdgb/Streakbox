@@ -48,21 +48,26 @@ The app maintains a generous, privacy-respecting **85% Free Tier** to drive maxi
 
 ---
 
-## 🚀 4. Upcoming Implementation Sprints
+## 🚀 4. Phased Release Roadmap
 
-### Sprint 1: Anti-Fragility Core Engine
-1. **Consistency Score & "Never Miss Twice" Recovery Protocol** (Calendar & Stats screens).
-2. **30-Second Fast-Track Onboarding Sheet** (First-time user flow).
-3. **Curated Quick-Pick Icon Matrix** (Habit creation sheet).
+> **V1 Feature Freeze**: Major new feature development for V1 is now **FROZEN**. All effort is dedicated to release verification, reliability, and edge case testing.
 
-### Sprint 2: Behavioral Psychology Notification Engine
-1. **Loss Aversion & Momentum Protector Nudges** (Local notification scheduling).
-2. **Implementation Intentions & Vulnerability Warnings** (Predictive time-of-day alerts).
+### 🔴 Version 1.0 (Production Release)
+- **Status**: **Feature Complete & In Final Verification**.
+- **Scope**: Core Habit Loop + Dual-Metric Consistency + "Never Miss Twice" Recovery + 30s Fast-Track Onboarding + Rhythm Analytics + 4K Share Cards + Local-First SQLite & JSON Backup Vault + Pro Paywall (Annual 7-Day Trial / Lifetime / Monthly).
+- **Core Document**: [`docs/V1_RELEASE_STRATEGY_AND_VERIFICATION_PLAN.md`](file:///c:/Users/User/source/repos/Streakbox/docs/V1_RELEASE_STRATEGY_AND_VERIFICATION_PLAN.md).
 
-### Sprint 3: Zero-Knowledge Firebase Cloud Sync & Auth
-1. **Dual Google & Apple Sign-In** with Anonymous Guest upgrade.
-2. **Deterministic Firestore CRDT Set-Union Sync** (`FieldValue.arrayUnion`).
+### 🟡 Version 1.1 (Data-Informed Refinements)
+- User retention analytics & funnel optimization (Day 2, Day 7, Day 30).
+- Data-driven notification timing adjustments based on actual habit check-in distribution.
+- Additional starter habit templates based on popular user creations.
 
-### Sprint 4: Smart Rhythm Analytics & Year-in-Review Wrapped
-1. **Day-of-Week Rhythm Breakdown** (Weakest vs Strongest day coaching).
-2. **Circadian Time-of-Day Velocity Correlations**.
+### 🟠 Version 2.0 (Cloud Sync & Behavioral Coaching)
+- Zero-Knowledge Cloud Vault Sync (Google Sign-In & Apple Sign-In).
+- Conflict-free CRDT Set-Union ledger for multi-device sync across phones and tablets.
+- Adaptive Behavioral Coaching & Day-of-Week failure pattern diagnostics.
+
+### 🔵 Version 3.0 (Ecosystem & Integrations)
+- Wear OS / Apple Watch 1-tap check-in companion app.
+- Google Health Connect / Apple Health integration.
+- Desktop Web Dashboard.

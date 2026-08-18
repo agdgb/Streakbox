@@ -244,5 +244,7 @@ final consistencyMetricsProvider = Provider<ConsistencyMetrics>((ref) {
     entries,
     habitCreatedAt: selectedHabit?.createdAt,
     windowDays: 30,
+    targetDaysOfWeek: selectedHabit?.targetDaysOfWeek,
+    targetDaysPerWeek: selectedHabit?.targetDaysPerWeek,
   );
 });

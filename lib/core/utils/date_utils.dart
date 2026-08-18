@@ -236,12 +236,15 @@ class AppDateUtils {
   }
 
   /// Calculates the Dual-Metric Consistency Rating (30-day/90-day window)
+  /// based on scheduled habit opportunities (rather than raw arbitrary calendar days)
   /// and detects whether the "Never Miss Twice" Recovery Protocol should be active.
   static ConsistencyMetrics calculateConsistencyMetrics(
     Set<String> entryDateKeys, {
     DateTime? today,
     int windowDays = 30,
     DateTime? habitCreatedAt,
+    List<int>? targetDaysOfWeek,
+    int? targetDaysPerWeek,
   }) {
     final referenceToday = startOfDay(today ?? DateTime.now());
     final todayKey = formatDateKey(referenceToday);
@@ -260,29 +263,38 @@ class AppDateUtils {
       }
     }
 
-    final totalTargetDays = referenceToday.difference(windowStart).inDays + 1;
+    final hasSpecificSchedule = targetDaysOfWeek != null && targetDaysOfWeek.isNotEmpty;
+    final scheduledDaySet = hasSpecificSchedule ? targetDaysOfWeek.toSet() : null;
+
+    int totalTargetOpportunities = 0;
     int completedCount = 0;
     DateTime cursor = windowStart;
 
     while (!cursor.isAfter(referenceToday)) {
       final key = formatDateKey(cursor);
-      if (entryDateKeys.contains(key)) {
-        completedCount++;
+      final isScheduled = scheduledDaySet == null || scheduledDaySet.contains(cursor.weekday);
+
+      if (isScheduled) {
+        totalTargetOpportunities++;
+        if (entryDateKeys.contains(key)) {
+          completedCount++;
+        }
       }
       cursor = cursor.add(const Duration(days: 1));
     }
 
-    final percentage = totalTargetDays > 0
-        ? ((completedCount / totalTargetDays) * 100.0).clamp(0.0, 100.0)
-        : 100.0;
+    if (totalTargetOpportunities == 0) {
+      totalTargetOpportunities = 1;
+    }
+
+    final percentage = ((completedCount / totalTargetOpportunities) * 100.0).clamp(0.0, 100.0);
 
     // Recovery mode is active when yesterday was missed and today hasn't been completed yet
-    // OR if user had a previous streak and missed yesterday
     final isRecoveryActive = !isTodayChecked && !isYesterdayChecked && entryDateKeys.isNotEmpty;
 
     return ConsistencyMetrics(
       completedDays: completedCount,
-      totalDays: totalTargetDays,
+      totalDays: totalTargetOpportunities,
       percentage: percentage,
       isRecoveryModeActive: isRecoveryActive,
       isTodayCompleted: isTodayChecked,
