@@ -10,6 +10,7 @@ import '../../state/habit_providers.dart';
 import '../../state/theme_preset_provider.dart';
 import '../habits/habit_form_sheet.dart';
 import '../habits/habit_tabs.dart';
+import '../social_share/social_share_sheet.dart';
 import 'widgets/month_grid.dart';
 import 'widgets/month_header.dart';
 
@@ -59,6 +60,14 @@ class CalendarScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          if (selectedHabit != null)
+            IconButton(
+              onPressed: () {
+                SocialShareSheet.show(context, habit: selectedHabit);
+              },
+              icon: const Icon(Icons.ios_share_rounded),
+              tooltip: 'Share Celebration Card',
+            ),
           IconButton(
             onPressed: () {
               ref

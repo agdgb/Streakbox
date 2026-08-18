@@ -10,6 +10,8 @@ import '../../data/repositories/habit_repository.dart';
 import '../../state/calendar_providers.dart';
 import '../../state/habit_providers.dart';
 import '../../state/repository_provider.dart';
+import '../social_share/social_share_card.dart';
+import '../social_share/social_share_sheet.dart';
 import 'widgets/contribution_heatmap.dart';
 import 'widgets/milestones_ladder_card.dart';
 import 'widgets/weekly_rhythm_card.dart';
@@ -36,6 +38,23 @@ class StatsScreen extends ConsumerWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              final selectedHabit = ref.read(selectedHabitProvider);
+              if (selectedHabit != null) {
+                SocialShareSheet.show(
+                  context,
+                  habit: selectedHabit,
+                  initialCardType: ShareCardType.matrixHeatmap,
+                );
+              }
+            },
+            icon: const Icon(Icons.ios_share_rounded),
+            tooltip: 'Share Analytics Matrix',
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: habitsAsync.when(
         data: (habits) {
