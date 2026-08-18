@@ -12,6 +12,7 @@ import '../habits/habit_form_sheet.dart';
 import '../habits/habit_tabs.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../social_share/social_share_sheet.dart';
+import 'widgets/behavioral_coaching_banner.dart';
 import 'widgets/month_grid.dart';
 import 'widgets/month_header.dart';
 import 'widgets/recovery_protocol_card.dart';
@@ -102,6 +103,9 @@ class CalendarScreen extends ConsumerWidget {
 
                 // 🛡️ Recovery Protocol Banner (Active when yesterday was missed)
                 const RecoveryProtocolCard(),
+
+                // 🧠 Behavioral Coaching & Momentum Banner
+                const BehavioralCoachingBanner(),
 
                 // Calendar Container Card
                 Container(
