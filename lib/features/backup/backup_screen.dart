@@ -7,11 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_theme_preset.dart';
 import '../../state/habit_providers.dart';
 import '../../state/repository_provider.dart';
 import '../../state/settings_provider.dart';
+import '../../state/theme_preset_provider.dart';
 
-/// Ultra-Premium Settings & Data Vault screen designed with modern iOS/Linear aesthetics.
+/// Ultra-Premium Settings & Data Vault screen designed with modern iOS/Linear aesthetics
+/// and support for the Nordic Noir / Neumorphic Theme Engine & 48-Hour Pro Free Trial.
 class BackupScreen extends ConsumerStatefulWidget {
   const BackupScreen({super.key});
 
@@ -288,10 +291,109 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     }
   }
 
+  void _showProTrialSheet(BuildContext context, AppThemePreset preset) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E222A) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(
+              color: preset.primaryColor.withValues(alpha: 0.4),
+              width: 1.2,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: preset.activePillGradient ??
+                      LinearGradient(colors: [preset.primaryColor, AppColors.secondary]),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: preset.primaryColor.withValues(alpha: 0.4),
+                      blurRadius: 16,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Unlock ${preset.displayName}',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Experience tactile neumorphic dark slate, glowing active pills, and radiant aesthetics free for 48 hours.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () {
+                  ref.read(proTrialProvider.notifier).start48HourTrial();
+                  ref.read(themePresetProvider.notifier).setPreset(preset);
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: preset.primaryColor,
+                      content: Text(
+                        '✨ 48-Hour Pro Free Trial activated! Enjoy ${preset.displayName}.',
+                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.bolt_rounded, color: Colors.black),
+                label: const Text(
+                  'Start 48-Hour Free Trial (1-Tap)',
+                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 14),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: preset.primaryColor,
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Maybe Later', style: TextStyle(color: Colors.grey)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currentThemeMode = ref.watch(themeModeProvider);
+    final themePreset = ref.watch(themePresetProvider);
+    final proState = ref.watch(proTrialProvider);
+    final isDark = themePreset.isDark;
     final firstDay = ref.watch(firstDayOfWeekProvider);
     final currentCheckSymbol = ref.watch(defaultCheckMarkProvider);
     final requireDoubleTap = ref.watch(tapProtectionProvider);
@@ -313,22 +415,22 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // 🛡️ Hero Privacy & Vault Card
-          _buildPrivacyVaultHero(context, isDark),
+          _buildPrivacyVaultHero(context, isDark, themePreset.primaryColor),
           const SizedBox(height: 20),
 
-          // 🎨 1. APPEARANCE & THEME SECTION
+          // 🎨 1. APPEARANCE & THEME PRESET SECTION
           _buildSectionHeader(
             context,
-            title: 'APPEARANCE & THEME',
+            title: 'THEME ENGINE & PRESETS',
             icon: Icons.palette_outlined,
-            accentColor: AppColors.primary,
+            accentColor: themePreset.primaryColor,
           ),
           const SizedBox(height: 8),
           _buildSettingsGroupCard(
             context,
             isDark: isDark,
             children: [
-              // Theme Visual Card Picker
+              // Theme Showcase Cards
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 child: Column(
@@ -337,71 +439,72 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     Row(
                       children: [
                         _buildTintedIconBadge(
-                          icon: Icons.dark_mode_outlined,
-                          accentColor: AppColors.primary,
+                          icon: Icons.auto_awesome_rounded,
+                          accentColor: themePreset.primaryColor,
                           isDark: isDark,
                         ),
                         const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Color Theme', style: AppTextStyles.labelBold(context)),
-                            Text(
-                              'Obsidian Dark, Clean Light or System match',
-                              style: AppTextStyles.bodySmall(context),
-                            ),
-                          ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text('Aesthetic Theme Presets', style: AppTextStyles.labelBold(context)),
+                                  if (proState.isTrialActive) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        'TRIAL (${proState.remainingTrialHours}h left)',
+                                        style: const TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              Text(
+                                'Select a signature design language for your habit dashboard',
+                                style: AppTextStyles.bodySmall(context),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildThemeVisualCard(
-                            context,
-                            title: 'Dark',
-                            subtitle: 'Obsidian',
-                            icon: Icons.nightlight_round,
-                            isSelected: currentThemeMode == ThemeMode.dark,
-                            onTap: () => ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.dark),
-                            previewBg: const Color(0xFF0F172A),
-                            previewCard: const Color(0xFF1E293B),
-                            previewAccent: AppColors.primary,
-                            isDark: isDark,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildThemeVisualCard(
-                            context,
-                            title: 'Light',
-                            subtitle: 'Paper Clean',
-                            icon: Icons.wb_sunny_rounded,
-                            isSelected: currentThemeMode == ThemeMode.light,
-                            onTap: () => ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.light),
-                            previewBg: const Color(0xFFF8FAFC),
-                            previewCard: Colors.white,
-                            previewAccent: const Color(0xFF10B981),
-                            isDark: isDark,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildThemeVisualCard(
-                            context,
-                            title: 'Auto',
-                            subtitle: 'System',
-                            icon: Icons.brightness_auto_rounded,
-                            isSelected: currentThemeMode == ThemeMode.system,
-                            onTap: () => ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.system),
-                            previewBg: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                            previewCard: isDark ? const Color(0xFF1E293B) : Colors.white,
-                            previewAccent: AppColors.secondary,
-                            isDark: isDark,
-                          ),
-                        ),
-                      ],
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 1.7,
+                      children: AppThemePreset.values.map((preset) {
+                        final isSelected = themePreset == preset;
+                        return _buildPresetTile(
+                          context: context,
+                          preset: preset,
+                          isSelected: isSelected,
+                          proUnlocked: proState.isProAccessGranted,
+                          onTap: () {
+                            if (preset.isPro && !proState.isProAccessGranted) {
+                              _showProTrialSheet(context, preset);
+                            } else {
+                              ref.read(themePresetProvider.notifier).setPreset(preset);
+                            }
+                          },
+                          isDark: isDark,
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),
@@ -530,7 +633,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       children: [
                         _buildTintedIconBadge(
                           icon: Icons.done_all_rounded,
-                          accentColor: AppColors.primary,
+                          accentColor: themePreset.primaryColor,
                           isDark: isDark,
                         ),
                         const SizedBox(width: 12),
@@ -559,19 +662,19 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                             height: 38,
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.primary.withValues(alpha: isDark ? 0.35 : 0.2)
+                                  ? themePreset.primaryColor.withValues(alpha: isDark ? 0.35 : 0.2)
                                   : (isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: isSelected
-                                    ? AppColors.primary
+                                    ? themePreset.primaryColor
                                     : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
                                 width: isSelected ? 2 : 0.8,
                               ),
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: AppColors.primary.withValues(alpha: 0.3),
+                                        color: themePreset.primaryColor.withValues(alpha: 0.3),
                                         blurRadius: 6,
                                       ),
                                     ]
@@ -579,7 +682,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                             ),
                             child: Center(
                               child: symbol == '✓' || symbol == '✔️'
-                                  ? const Icon(Icons.check_rounded, color: AppColors.primary, size: 20)
+                                  ? Icon(Icons.check_rounded, color: themePreset.primaryColor, size: 20)
                                   : (symbol == '❌'
                                       ? const Icon(Icons.close_rounded, color: AppColors.error, size: 20)
                                       : Text(symbol, style: const TextStyle(fontSize: 16))),
@@ -604,7 +707,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       children: [
                         _buildTintedIconBadge(
                           icon: Icons.today_rounded,
-                          accentColor: AppColors.primary,
+                          accentColor: themePreset.primaryColor,
                           isDark: isDark,
                         ),
                         const SizedBox(width: 12),
@@ -620,7 +723,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       ],
                     ),
                     const SizedBox(height: 14),
-                    _buildTodayStyleGrid(context, isDark, todayStyle),
+                    _buildTodayStyleGrid(context, isDark, todayStyle, themePreset.primaryColor),
                   ],
                 ),
               ),
@@ -641,7 +744,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                   style: AppTextStyles.bodySmall(context),
                 ),
                 value: requireDoubleTap,
-                activeTrackColor: AppColors.primary,
+                activeTrackColor: themePreset.primaryColor,
                 onChanged: (val) => ref.read(tapProtectionProvider.notifier).setDoubleTapRequired(val),
               ),
 
@@ -679,7 +782,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             context,
             title: 'DATA VAULT & PORTABILITY',
             icon: Icons.security_rounded,
-            accentColor: AppColors.primary,
+            accentColor: themePreset.primaryColor,
           ),
           const SizedBox(height: 8),
           _buildSettingsGroupCard(
@@ -691,7 +794,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 leading: _buildTintedIconBadge(
                   icon: Icons.upload_file_rounded,
-                  accentColor: AppColors.primary,
+                  accentColor: themePreset.primaryColor,
                   isDark: isDark,
                 ),
                 title: Text('Export Backup (JSON)', style: AppTextStyles.labelBold(context)),
@@ -743,7 +846,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: _buildTintedIconBadge(
                   icon: Icons.auto_awesome_rounded,
-                  accentColor: AppColors.primary,
+                  accentColor: themePreset.primaryColor,
                   isDark: isDark,
                 ),
                 title: Text('Streakbox Engine', style: AppTextStyles.labelBold(context)),
@@ -751,15 +854,15 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
+                    color: themePreset.primaryColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                    'PRO',
+                  child: Text(
+                    proState.isProAccessGranted ? 'PRO UNLOCKED' : 'PRO',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+                      color: themePreset.primaryColor,
                     ),
                   ),
                 ),
@@ -793,9 +896,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     );
   }
 
-  // --- Helper Widget Builders for Ultra-Premium Aesthetics ---
+  // --- Helper Widget Builders ---
 
-  Widget _buildPrivacyVaultHero(BuildContext context, bool isDark) {
+  Widget _buildPrivacyVaultHero(BuildContext context, bool isDark, Color primaryColor) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -804,17 +907,17 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           end: Alignment.bottomRight,
           colors: isDark
               ? [
-                  AppColors.primary.withValues(alpha: 0.20),
+                  primaryColor.withValues(alpha: 0.20),
                   const Color(0xFF0F172A),
                 ]
               : [
-                  AppColors.primary.withValues(alpha: 0.15),
+                  primaryColor.withValues(alpha: 0.15),
                   const Color(0xFFF1F5F9),
                 ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: isDark ? 0.35 : 0.25),
+          color: primaryColor.withValues(alpha: isDark ? 0.35 : 0.25),
           width: 1.2,
         ),
       ),
@@ -823,14 +926,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.2),
+              color: primaryColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.4),
+                color: primaryColor.withValues(alpha: 0.4),
                 width: 1.5,
               ),
             ),
-            child: const Icon(Icons.shield_rounded, color: AppColors.primary, size: 26),
+            child: Icon(Icons.shield_rounded, color: primaryColor, size: 26),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -847,7 +950,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Icon(Icons.lock_rounded, size: 14, color: AppColors.primary),
+                    Icon(Icons.lock_rounded, size: 14, color: primaryColor),
                   ],
                 ),
                 const SizedBox(height: 2),
@@ -937,75 +1040,98 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     );
   }
 
-  Widget _buildThemeVisualCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
+  Widget _buildPresetTile({
+    required BuildContext context,
+    required AppThemePreset preset,
     required bool isSelected,
+    required bool proUnlocked,
     required VoidCallback onTap,
-    required Color previewBg,
-    required Color previewCard,
-    required Color previewAccent,
     required bool isDark,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: isSelected
-              ? previewAccent.withValues(alpha: isDark ? 0.18 : 0.12)
+              ? preset.primaryColor.withValues(alpha: isDark ? 0.20 : 0.14)
               : (isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
-                ? previewAccent
+                ? preset.primaryColor
                 : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-            width: isSelected ? 1.8 : 0.8,
+            width: isSelected ? 2 : 0.8,
           ),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Mini Device Representation
-            Container(
-              width: 36,
-              height: 28,
-              decoration: BoxDecoration(
-                color: previewBg,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder, width: 0.6),
-              ),
-              child: Center(
-                child: Container(
-                  width: 14,
-                  height: 14,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 22,
+                  height: 22,
                   decoration: BoxDecoration(
-                    color: previewCard,
-                    borderRadius: BorderRadius.circular(3),
+                    color: preset.backgroundColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: preset.primaryColor, width: 1.5),
                   ),
                   child: Center(
-                    child: Icon(icon, size: 10, color: previewAccent),
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: preset.primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                if (preset.isPro && !proUnlocked)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      '👑 PRO',
+                      style: TextStyle(
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  )
+                else if (isSelected)
+                  Icon(Icons.check_circle_rounded, size: 16, color: preset.primaryColor),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? previewAccent : null,
-              ),
-            ),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 9.5,
-                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  preset.displayName,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected ? preset.primaryColor : null,
+                  ),
+                ),
+                Text(
+                  preset.subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1017,6 +1143,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     BuildContext context,
     bool isDark,
     TodayIndicatorStyle currentStyle,
+    Color primaryColor,
   ) {
     final styles = [
       (
@@ -1059,19 +1186,19 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppColors.primary.withValues(alpha: isDark ? 0.20 : 0.12)
+                  ? primaryColor.withValues(alpha: isDark ? 0.20 : 0.12)
                   : (isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
-                    ? AppColors.primary
+                    ? primaryColor
                     : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
                 width: isSelected ? 1.8 : 0.8,
               ),
             ),
             child: Row(
               children: [
-                _buildLivePreviewBox(isDark, item.style),
+                _buildLivePreviewBox(isDark, item.style, primaryColor),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -1083,7 +1210,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? AppColors.primary : null,
+                          color: isSelected ? primaryColor : null,
                         ),
                       ),
                       Text(
@@ -1104,7 +1231,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     );
   }
 
-  Widget _buildLivePreviewBox(bool isDark, TodayIndicatorStyle style) {
+  Widget _buildLivePreviewBox(bool isDark, TodayIndicatorStyle style, Color primaryColor) {
     Widget cell = Container(
       width: 32,
       height: 32,
@@ -1113,16 +1240,16 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         borderRadius: BorderRadius.circular(7),
         border: style == TodayIndicatorStyle.ringBorder
             ? Border.all(color: isDark ? Colors.white : AppColors.darkTextPrimary, width: 1.8)
-            : Border.all(color: AppColors.primary.withValues(alpha: 0.8), width: 1.2),
+            : Border.all(color: primaryColor.withValues(alpha: 0.8), width: 1.2),
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const Column(
+          Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.check_rounded, color: AppColors.primary, size: 11),
-              Text(
+              Icon(Icons.check_rounded, color: primaryColor, size: 11),
+              const Text(
                 '18',
                 style: TextStyle(
                   fontSize: 8.5,
@@ -1138,8 +1265,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               child: Container(
                 width: 4,
                 height: 4,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
+                decoration: BoxDecoration(
+                  color: primaryColor,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -1151,7 +1278,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 width: 10,
                 height: 1.5,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: primaryColor,
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),

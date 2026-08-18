@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_theme_preset.dart';
 import '../../data/models/habit.dart';
 import '../../state/calendar_providers.dart';
 import '../../state/habit_providers.dart';
+import '../../state/theme_preset_provider.dart';
 import '../habits/habit_form_sheet.dart';
 import '../habits/habit_tabs.dart';
 import 'widgets/month_grid.dart';
@@ -21,11 +23,12 @@ class CalendarScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final habitsAsync = ref.watch(habitsProvider);
     final selectedHabit = ref.watch(selectedHabitProvider);
     final currentStreak = ref.watch(currentStreakProvider);
     final bestStreak = ref.watch(bestStreakProvider);
+    final themePreset = ref.watch(themePresetProvider);
+    final isDark = themePreset.isDark;
 
     return Scaffold(
       appBar: AppBar(
@@ -86,57 +89,55 @@ class CalendarScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
 
                 // Calendar Container Card
-                Card(
-                  child: Padding(
-                    padding: AppSpacing.paddingMd,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const MonthHeaderWidget(),
-                        const SizedBox(height: AppSpacing.md),
-                        const MonthGridWidget(),
-                      ],
-                    ),
+                Container(
+                  decoration: themePreset.neumorphicCard(radius: 20),
+                  padding: AppSpacing.paddingMd,
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      MonthHeaderWidget(),
+                      SizedBox(height: AppSpacing.md),
+                      MonthGridWidget(),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
                 // Live Streaks Quick Metrics Card (Current & Best Streak)
                 if (selectedHabit != null) ...[
-                  Card(
-                    child: Padding(
-                      padding: AppSpacing.paddingMd,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildMetricItem(
-                              context,
-                              title: 'Current Streak',
-                              value:
-                                  '$currentStreak ${currentStreak == 1 ? "Day" : "Days"}',
-                              icon: Icons.local_fire_department_rounded,
-                              accentColor: AppColors.warning,
-                            ),
+                  Container(
+                    decoration: themePreset.neumorphicCard(radius: 18),
+                    padding: AppSpacing.paddingMd,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildMetricItem(
+                            context,
+                            title: 'Current Streak',
+                            value:
+                                '$currentStreak ${currentStreak == 1 ? "Day" : "Days"}',
+                            icon: Icons.local_fire_department_rounded,
+                            accentColor: themePreset.primaryColor,
                           ),
-                          Container(
-                            width: 1,
-                            height: 48,
-                            color: isDark
-                                ? AppColors.darkBorder
-                                : AppColors.lightBorder,
+                        ),
+                        Container(
+                          width: 1,
+                          height: 48,
+                          color: isDark
+                              ? themePreset.borderColor
+                              : AppColors.lightBorder,
+                        ),
+                        Expanded(
+                          child: _buildMetricItem(
+                            context,
+                            title: 'Best Streak',
+                            value:
+                                '$bestStreak ${bestStreak == 1 ? "Day" : "Days"}',
+                            icon: Icons.emoji_events_rounded,
+                            accentColor: themePreset.primaryColor,
                           ),
-                          Expanded(
-                            child: _buildMetricItem(
-                              context,
-                              title: 'Best Streak',
-                              value:
-                                  '$bestStreak ${bestStreak == 1 ? "Day" : "Days"}',
-                              icon: Icons.emoji_events_rounded,
-                              accentColor: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
 

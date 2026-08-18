@@ -7,6 +7,7 @@ import '../../../data/models/habit_entry.dart';
 import '../../../state/calendar_providers.dart';
 import '../../../state/habit_providers.dart';
 import '../../../state/settings_provider.dart';
+import '../../../state/theme_preset_provider.dart';
 import 'day_cell.dart';
 import 'day_detail_sheet.dart';
 import 'weekday_header.dart';
@@ -161,6 +162,7 @@ class _MonthGridWidgetState extends ConsumerState<MonthGridWidget> {
 
         final todayStyle = ref.watch(todayIndicatorStyleProvider);
         final fillStyle = ref.watch(calendarFillStyleProvider);
+        final themePreset = ref.watch(themePresetProvider);
 
         return DayCellWidget(
           key: ValueKey('${selectedHabit?.id}_${cell.dateKey}'),
@@ -170,6 +172,7 @@ class _MonthGridWidgetState extends ConsumerState<MonthGridWidget> {
           defaultCheckSymbol: defaultCheckSymbol,
           todayStyle: todayStyle,
           fillStyle: fillStyle,
+          themePreset: themePreset,
           habitColor: habitColor,
           onTap: () {
             if (!requireDoubleTap) {

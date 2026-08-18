@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_theme_preset.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../state/settings_provider.dart';
 
-/// Interactive calendar cell widget for a single day with visible day numbers,
-/// custom emoji stickers, customizable default checkmarks, double-tap protection,
-/// selectable Today highlight indicator styles, future-date safeguards,
-/// and support for Pure Minimalist (Theme Native ✅ / ❌) vs Solid Fill styles.
+/// Interactive calendar cell widget for a single day with true Neumorphic depth,
+/// glowing radiant pills, sunken inset grooves, visible day numbers,
+/// custom emoji stickers, and customizable checkmarks.
 class DayCellWidget extends StatelessWidget {
   final CalendarDayCell cell;
   final bool isChecked;
@@ -17,6 +16,7 @@ class DayCellWidget extends StatelessWidget {
   final String defaultCheckSymbol;
   final TodayIndicatorStyle todayStyle;
   final CalendarFillStyle fillStyle;
+  final AppThemePreset themePreset;
   final Color habitColor;
   final VoidCallback onTap;
   final VoidCallback? onDoubleTap;
@@ -30,6 +30,7 @@ class DayCellWidget extends StatelessWidget {
     this.defaultCheckSymbol = '✓',
     this.todayStyle = TodayIndicatorStyle.ringBorder,
     this.fillStyle = CalendarFillStyle.pureMinimal,
+    this.themePreset = AppThemePreset.obsidian,
     required this.habitColor,
     required this.onTap,
     this.onDoubleTap,
@@ -38,105 +39,148 @@ class DayCellWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = themePreset.isDark;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final cellDate = DateTime(cell.date.year, cell.date.month, cell.date.day);
     final isFuture = cellDate.isAfter(today);
 
-    // Background & border styling depending on state and fill style
-    Color cellBgColor;
-    Border? border;
+    final primaryAccent = themePreset.primaryColor;
+
+    // -------------------------------------------------------------------------
+    // True Neumorphic & Standard Box Decorations
+    // -------------------------------------------------------------------------
+    BoxDecoration decoration;
 
     if (isChecked) {
-      if (fillStyle == CalendarFillStyle.solidFill) {
-        // Vibrant solid fill style
-        cellBgColor = habitColor;
-        if (cell.isToday && todayStyle == TodayIndicatorStyle.ringBorder) {
-          border = Border.all(
-            color: Colors.white,
-            width: 2.0,
+      if (cell.isToday && themePreset.activePillGradient != null && fillStyle == CalendarFillStyle.pureMinimal) {
+        // 🌟 Radiant Glowing Neumorphic Convex Pill (Active / Today)
+        decoration = themePreset.neumorphicGlowingPill(radius: 12);
+        if (todayStyle == TodayIndicatorStyle.ringBorder) {
+          decoration = decoration.copyWith(
+            border: Border.all(color: Colors.white, width: 2.0),
           );
         }
-      } else {
-        // Pure Minimalist style (adheres strictly to dark/light theme defaults)
-        cellBgColor = isDark
-            ? AppColors.darkCardElevated
-            : AppColors.lightSurface;
+      } else if (fillStyle == CalendarFillStyle.solidFill) {
+        // Saturated fill: adapts dynamically to the active theme's primary color unless user customized habit color
+        final isDefaultHabitColor = habitColor.toARGB32() == 0xFF10B981;
+        final fillColor = isDefaultHabitColor ? primaryAccent : habitColor;
+        final grad = (isDefaultHabitColor && themePreset.activePillGradient != null && cell.isToday)
+            ? themePreset.activePillGradient
+            : null;
 
-        if (cell.isToday && todayStyle == TodayIndicatorStyle.ringBorder) {
-          border = Border.all(
-            color: isDark ? Colors.white : AppColors.darkTextPrimary,
-            width: 2.0,
-          );
-        } else {
-          border = Border.all(
-            color: isDark
-                ? AppColors.primary.withValues(alpha: 0.75)
-                : AppColors.primary.withValues(alpha: 0.85),
-            width: 1.4,
-          );
-        }
+        decoration = BoxDecoration(
+          color: grad == null ? fillColor : null,
+          gradient: grad,
+          borderRadius: BorderRadius.circular(12),
+          border: cell.isToday && todayStyle == TodayIndicatorStyle.ringBorder
+              ? Border.all(color: Colors.white, width: 2.0)
+              : null,
+          boxShadow: [
+            BoxShadow(
+              color: fillColor.withValues(alpha: 0.45),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        );
+      } else if (themePreset.isNeumorphic) {
+        // Neumorphic tactile raised cell for completed past days
+        decoration = themePreset.neumorphicCard(radius: 12).copyWith(
+          border: Border.all(
+            color: primaryAccent.withValues(alpha: 0.75),
+            width: 1.2,
+          ),
+        );
+      } else {
+        // Standard Pure Minimal tile
+        decoration = BoxDecoration(
+          color: themePreset.cardElevatedColor,
+          borderRadius: BorderRadius.circular(12),
+          border: cell.isToday && todayStyle == TodayIndicatorStyle.ringBorder
+              ? Border.all(color: isDark ? Colors.white : AppColors.darkTextPrimary, width: 2.0)
+              : Border.all(color: primaryAccent.withValues(alpha: isDark ? 0.8 : 0.7), width: 1.4),
+          boxShadow: [
+            BoxShadow(
+              color: primaryAccent.withValues(alpha: isDark ? 0.25 : 0.15),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        );
       }
     } else if (cell.isToday) {
-      cellBgColor = isDark
-          ? AppColors.darkCardElevated
-          : AppColors.lightCardElevated;
-      border = Border.all(
-        color: AppColors.primary,
-        width: 1.8,
-      );
+      // Unchecked Today
+      if (themePreset.isNeumorphic) {
+        decoration = themePreset.neumorphicInset(radius: 12).copyWith(
+          border: Border.all(color: primaryAccent, width: 1.8),
+        );
+      } else {
+        decoration = BoxDecoration(
+          color: themePreset.cardElevatedColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: primaryAccent, width: 1.8),
+        );
+      }
     } else if (isFuture) {
-      // Future dates: visually disabled & non-interactive
-      cellBgColor = isDark
-          ? AppColors.darkBackground.withValues(alpha: 0.15)
-          : AppColors.lightBackground.withValues(alpha: 0.3);
-      border = Border.all(
-        color: (isDark ? AppColors.darkBorder : AppColors.lightBorder)
-            .withValues(alpha: 0.25),
-        width: 0.5,
+      // Future dates
+      decoration = BoxDecoration(
+        color: themePreset.backgroundColor.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: themePreset.borderColor.withValues(alpha: 0.2),
+          width: 0.5,
+        ),
       );
     } else if (cell.isCurrentMonth) {
-      cellBgColor = isDark
-          ? AppColors.darkCard
-          : AppColors.lightSurface;
-      border = Border.all(
-        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-        width: 0.8,
-      );
+      // Unchecked current month day
+      if (themePreset.isNeumorphic) {
+        decoration = themePreset.neumorphicInset(radius: 12);
+      } else {
+        decoration = BoxDecoration(
+          color: themePreset.cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: themePreset.borderColor, width: 0.8),
+        );
+      }
     } else {
-      // Adjacent month dates: visibly dimmed
-      cellBgColor = isDark
-          ? AppColors.darkBackground.withValues(alpha: 0.2)
-          : AppColors.lightBackground.withValues(alpha: 0.4);
-      border = Border.all(
-        color: (isDark ? AppColors.darkBorder : AppColors.lightBorder)
-            .withValues(alpha: 0.25),
-        width: 0.5,
+      // Adjacent month day
+      decoration = BoxDecoration(
+        color: themePreset.backgroundColor.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: themePreset.borderColor.withValues(alpha: 0.2),
+          width: 0.5,
+        ),
       );
     }
 
-    // Text color depending on state & fill style
+    // -------------------------------------------------------------------------
+    // Text & Checkmark Colors
+    // -------------------------------------------------------------------------
     Color textColor;
+    Color checkColor;
+
     if (isChecked) {
-      if (fillStyle == CalendarFillStyle.solidFill) {
+      if (cell.isToday && themePreset.activePillGradient != null || fillStyle == CalendarFillStyle.solidFill) {
         textColor = Colors.white;
+        checkColor = Colors.white;
       } else {
-        textColor = isDark ? Colors.white : AppColors.lightTextPrimary;
+        textColor = isDark ? Colors.white : themePreset.textPrimaryColor;
+        checkColor = primaryAccent;
       }
     } else if (cell.isToday) {
-      textColor = AppColors.primary;
+      textColor = primaryAccent;
+      checkColor = primaryAccent;
     } else if (isFuture) {
-      textColor = (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted)
-          .withValues(alpha: 0.35);
+      textColor = themePreset.textSecondaryColor.withValues(alpha: 0.3);
+      checkColor = primaryAccent;
     } else if (cell.isCurrentMonth) {
-      textColor = isDark
-          ? AppColors.darkTextPrimary
-          : AppColors.lightTextPrimary;
+      textColor = themePreset.textPrimaryColor;
+      checkColor = primaryAccent;
     } else {
-      // Dim adjacent month date numbers
-      textColor = (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted)
-          .withValues(alpha: 0.35);
+      textColor = themePreset.textSecondaryColor.withValues(alpha: 0.3);
+      checkColor = primaryAccent;
     }
 
     final hasCustomEmoji = emoji != null && emoji!.isNotEmpty;
@@ -147,27 +191,10 @@ class DayCellWidget extends StatelessWidget {
     Widget cellContent = AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
-      decoration: BoxDecoration(
-        color: cellBgColor,
-        borderRadius: AppSpacing.roundedMd,
-        border: border,
-        boxShadow: isChecked
-            ? [
-                BoxShadow(
-                  color: (fillStyle == CalendarFillStyle.solidFill
-                          ? habitColor
-                          : AppColors.primary)
-                      .withValues(alpha: isDark ? 0.25 : 0.15),
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
-      ),
+      decoration: decoration,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Main Content: Day Number and Checkmark/Emoji
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
@@ -188,15 +215,14 @@ class DayCellWidget extends StatelessWidget {
                 (defaultCheckSymbol == '✓' || defaultCheckSymbol == '✔️'
                         ? Icon(
                             Icons.check_rounded,
-                            color: fillStyle == CalendarFillStyle.solidFill
-                                ? Colors.white
-                                : AppColors.primary,
+                            color: checkColor,
                             size: 15,
                           )
                         : (defaultCheckSymbol == '❌'
                             ? Icon(
                                 Icons.close_rounded,
-                                color: fillStyle == CalendarFillStyle.solidFill
+                                color: (cell.isToday && themePreset.activePillGradient != null) ||
+                                        fillStyle == CalendarFillStyle.solidFill
                                     ? Colors.white
                                     : AppColors.error,
                                 size: 15,
@@ -205,7 +231,8 @@ class DayCellWidget extends StatelessWidget {
                                 defaultCheckSymbol,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: fillStyle == CalendarFillStyle.solidFill
+                                  color: (cell.isToday && themePreset.activePillGradient != null) ||
+                                          fillStyle == CalendarFillStyle.solidFill
                                       ? Colors.white
                                       : null,
                                   fontWeight: FontWeight.w800,
@@ -241,16 +268,14 @@ class DayCellWidget extends StatelessWidget {
                   height: 2,
                   margin: const EdgeInsets.only(top: 1),
                   decoration: BoxDecoration(
-                    color: fillStyle == CalendarFillStyle.solidFill
-                        ? Colors.white
-                        : AppColors.primary,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),
             ],
           ),
 
-          // Today Indicator: Corner Dot option (active when unchecked OR checked with cornerDot style)
+          // Today Indicator: Corner Dot option
           if (cell.isToday &&
               (!isChecked || todayStyle == TodayIndicatorStyle.cornerDot))
             Positioned(
@@ -260,18 +285,14 @@ class DayCellWidget extends StatelessWidget {
                 width: 5,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: (isChecked && fillStyle == CalendarFillStyle.solidFill)
-                      ? Colors.white
-                      : AppColors.primary,
+                  color: isChecked ? Colors.white : primaryAccent,
                   shape: BoxShape.circle,
-                  boxShadow: isChecked
-                      ? const [
-                          BoxShadow(
-                            color: Colors.black45,
-                            blurRadius: 2,
-                          )
-                        ]
-                      : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryAccent.withValues(alpha: 0.6),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -279,7 +300,7 @@ class DayCellWidget extends StatelessWidget {
       ),
     );
 
-    // Today Indicator: Ambient Pulse option (breathing animation)
+    // Today Indicator: Ambient Pulse option
     if (cell.isToday &&
         isChecked &&
         todayStyle == TodayIndicatorStyle.ambientPulse) {
@@ -307,7 +328,7 @@ class DayCellWidget extends StatelessWidget {
               onTap: isFuture ? null : onTap,
               onDoubleTap: isFuture ? null : onDoubleTap,
               onLongPress: isFuture ? null : onLongPress,
-              borderRadius: AppSpacing.roundedMd,
+              borderRadius: BorderRadius.circular(12),
               child: cellContent,
             ),
           ),
