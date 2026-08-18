@@ -10,6 +10,7 @@ import '../../state/habit_providers.dart';
 import '../../state/theme_preset_provider.dart';
 import '../habits/habit_form_sheet.dart';
 import '../habits/habit_tabs.dart';
+import '../onboarding/onboarding_screen.dart';
 import '../social_share/social_share_sheet.dart';
 import 'widgets/month_grid.dart';
 import 'widgets/month_header.dart';
@@ -243,86 +244,10 @@ class CalendarScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: Padding(
-        padding: AppSpacing.paddingXl,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-              ),
-              child: const Icon(
-                Icons.track_changes_rounded,
-                color: AppColors.primary,
-                size: 44,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'No habits tracked yet',
-              style: AppTextStyles.titleLarge(context),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Create your first habit to start logging your streaks.',
-              style: AppTextStyles.bodyMedium(context),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FilledButton.icon(
-                  onPressed: () async {
-                    final defaultHabit = Habit(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      name: 'Daily Tracker',
-                      colorValue: AppColors.habitColors.first.color.toARGB32(),
-                      createdAt: DateTime.now(),
-                    );
-                    await ref.read(habitsProvider.notifier).addHabit(defaultHabit);
-                  },
-                  icon: const Icon(Icons.flash_on_rounded),
-                  label: const Text('Quick Start (✅ / ❌)'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: AppSpacing.roundedLg,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                OutlinedButton.icon(
-                  onPressed: () => _showAddHabitSheet(context),
-                  icon: const Icon(Icons.tune_rounded),
-                  label: const Text('Custom Habit'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: AppSpacing.roundedLg,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return OnboardingScreen(
+      onFinish: () {
+        ref.invalidate(habitsProvider);
+      },
     );
   }
 

@@ -177,3 +177,23 @@ final emojiPickerStyleProvider =
     NotifierProvider<EmojiPickerStyleNotifier, EmojiPickerStyle>(
   EmojiPickerStyleNotifier.new,
 );
+
+// -----------------------------------------------------------------------------
+// 8. First-Launch Onboarding Completed Setting
+// -----------------------------------------------------------------------------
+class OnboardingCompletedNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    return false;
+  }
+
+  void completeOnboarding() {
+    state = true;
+  }
+}
+
+final onboardingCompletedProvider =
+    NotifierProvider<OnboardingCompletedNotifier, bool>(
+  OnboardingCompletedNotifier.new,
+);
+
