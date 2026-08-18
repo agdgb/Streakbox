@@ -178,4 +178,8 @@ class AppTextStyles {
       color: color ?? (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
     );
   }
+
+  static TextStyle h2(BuildContext context, {Color? color}) => displayMedium(context, color: color);
+
+  static TextStyle caption(BuildContext context, {Color? color}) => bodySmall(context, color: color);
 }

@@ -9,9 +9,11 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_theme_preset.dart';
 import '../../state/habit_providers.dart';
+import '../../state/pro_entitlement_provider.dart';
 import '../../state/repository_provider.dart';
 import '../../state/settings_provider.dart';
 import '../../state/theme_preset_provider.dart';
+import '../paywall/paywall_sheet.dart';
 
 /// Ultra-Premium Settings & Data Vault screen designed with modern iOS/Linear aesthetics
 /// and support for the Nordic Noir / Neumorphic Theme Engine & 48-Hour Pro Free Trial.
@@ -292,107 +294,166 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   }
 
   void _showProTrialSheet(BuildContext context, AppThemePreset preset) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E222A) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(
-              color: preset.primaryColor.withValues(alpha: 0.4),
-              width: 1.2,
-            ),
+    PaywallSheet.show(context, trigger: 'Theme Studio');
+  }
+
+  Widget _buildProUpgradeHero(
+    BuildContext context,
+    bool isDark,
+    AppThemePreset themePreset,
+    ProTierState proState,
+  ) {
+    final isPro = proState.isPro;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isPro
+              ? [
+                  const Color(0xFF10B981).withValues(alpha: isDark ? 0.22 : 0.15),
+                  const Color(0xFF059669).withValues(alpha: isDark ? 0.14 : 0.08),
+                ]
+              : [
+                  const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.22 : 0.15),
+                  const Color(0xFFEF4444).withValues(alpha: isDark ? 0.14 : 0.08),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: (isPro ? const Color(0xFF10B981) : const Color(0xFFF59E0B))
+              .withValues(alpha: 0.4),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isPro ? const Color(0xFF10B981) : const Color(0xFFF59E0B))
+                .withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
               Container(
-                width: 44,
-                height: 4,
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  gradient: preset.activePillGradient ??
-                      LinearGradient(colors: [preset.primaryColor, AppColors.secondary]),
+                  gradient: LinearGradient(
+                    colors: isPro
+                        ? [const Color(0xFF10B981), const Color(0xFF059669)]
+                        : [const Color(0xFFF59E0B), const Color(0xFFD97706)],
+                  ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: preset.primaryColor.withValues(alpha: 0.4),
-                      blurRadius: 16,
+                      color: (isPro ? const Color(0xFF10B981) : const Color(0xFFF59E0B))
+                          .withValues(alpha: 0.4),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Unlock ${preset.displayName}',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Experience tactile neumorphic dark slate, glowing active pills, and radiant aesthetics free for 48 hours.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                child: Icon(
+                  isPro ? Icons.verified_rounded : Icons.workspace_premium_rounded,
+                  size: 22,
+                  color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () {
-                  ref.read(proTrialProvider.notifier).start48HourTrial();
-                  ref.read(themePresetProvider.notifier).setPreset(preset);
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: preset.primaryColor,
-                      content: Text(
-                        '✨ 48-Hour Pro Free Trial activated! Enjoy ${preset.displayName}.',
-                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
-                      ),
-                      behavior: SnackBarBehavior.floating,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          isPro ? 'STREAKBOX PRO' : 'UPGRADE TO PRO',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                            color: isPro ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: (isPro ? const Color(0xFF10B981) : const Color(0xFFF59E0B))
+                                .withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            proState.planLabel,
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w900,
+                              color: isPro ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-                icon: const Icon(Icons.bolt_rounded, color: Colors.black),
-                label: const Text(
-                  'Start 48-Hour Free Trial (1-Tap)',
-                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 14),
+                    const SizedBox(height: 2),
+                    Text(
+                      isPro
+                          ? (proState.isTrialActive
+                              ? '${proState.remainingTrialHours} hours remaining on your free test drive.'
+                              : 'All signature themes, streak freezes & cloud features unlocked.')
+                          : 'Unlock Streak Freezes, Cloud Sync, Neumorphic Themes & Smart Nudges.',
+                      style: AppTextStyles.caption(context).copyWith(
+                        color: themePreset.textSecondaryColor,
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ],
                 ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: preset.primaryColor,
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Maybe Later', style: TextStyle(color: Colors.grey)),
               ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: FilledButton.icon(
+              onPressed: () {
+                PaywallSheet.show(context, trigger: 'Settings Header');
+              },
+              icon: Icon(
+                isPro ? Icons.tune_rounded : Icons.bolt_rounded,
+                size: 16,
+                color: Colors.black,
+              ),
+              label: Text(
+                isPro ? 'Manage PRO Plan' : 'Explore PRO Features (7-Day Trial)',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: isPro ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final themePreset = ref.watch(themePresetProvider);
-    final proState = ref.watch(proTrialProvider);
+    final proState = ref.watch(proEntitlementProvider);
     final isDark = themePreset.isDark;
     final firstDay = ref.watch(firstDayOfWeekProvider);
     final currentCheckSymbol = ref.watch(defaultCheckMarkProvider);
@@ -414,6 +475,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
+          // 👑 Streakbox PRO Hero Upgrade Banner
+          _buildProUpgradeHero(context, isDark, themePreset, proState),
+          const SizedBox(height: 16),
+
           // 🛡️ Hero Privacy & Vault Card
           _buildPrivacyVaultHero(context, isDark, themePreset.primaryColor),
           const SizedBox(height: 20),
@@ -494,9 +559,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                           context: context,
                           preset: preset,
                           isSelected: isSelected,
-                          proUnlocked: proState.isProAccessGranted,
+                          proUnlocked: proState.isPro,
                           onTap: () {
-                            if (preset.isPro && !proState.isProAccessGranted) {
+                            if (preset.isPro && !proState.isPro) {
                               _showProTrialSheet(context, preset);
                             } else {
                               ref.read(themePresetProvider.notifier).setPreset(preset);
@@ -858,7 +923,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    proState.isProAccessGranted ? 'PRO UNLOCKED' : 'PRO',
+                    proState.isPro ? 'PRO UNLOCKED' : 'FREE EDITION',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
