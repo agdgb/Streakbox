@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_icons.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../data/models/habit.dart';
 import '../../state/habit_providers.dart';
 import 'widgets/color_picker_grid.dart';
 import 'widgets/confirm_delete_dialog.dart';
-import 'widgets/icon_picker_grid.dart';
+import 'widgets/curated_icon_picker.dart';
 
 /// Modal bottom sheet for creating or editing a habit with frequency and repetition goals.
 class HabitFormSheet extends ConsumerStatefulWidget {
@@ -152,6 +153,68 @@ class _HabitFormSheetState extends ConsumerState<HabitFormSheet> {
         ),
       );
     }
+  }
+
+  void _showFullEmojiPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          height: 320,
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightSurface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Choose Habit Icon', style: AppTextStyles.titleMedium(context)),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 6,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                  ),
+                  itemCount: AppIcons.habitIcons.length,
+                  itemBuilder: (context, index) {
+                    final iconOpt = AppIcons.habitIcons[index];
+                    return InkWell(
+                      onTap: () {
+                        setState(() => _selectedIconCodePoint = iconOpt.codePoint);
+                        Navigator.of(ctx).pop();
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkCardElevated : AppColors.lightCardElevated,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(iconOpt.icon, size: 22, color: Color(_selectedColorValue)),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -436,16 +499,19 @@ class _HabitFormSheetState extends ConsumerState<HabitFormSheet> {
                   ),
                   const SizedBox(height: AppSpacing.lg),
 
-                  // Habit Icon Selector
-                  Text('Icon', style: AppTextStyles.labelLarge(context)),
+                  // Habit Icon Selector (Curated Quick-Picks)
+                  Text('Habit Icon', style: AppTextStyles.labelLarge(context)),
                   const SizedBox(height: AppSpacing.sm),
-                  IconPickerGrid(
+                  CuratedIconPicker(
                     selectedCodePoint: _selectedIconCodePoint,
                     activeColor: activeColor,
                     onIconSelected: (codePoint) {
                       setState(() {
                         _selectedIconCodePoint = codePoint;
                       });
+                    },
+                    onOpenFullEmojiKeyboard: () {
+                      _showFullEmojiPicker(context);
                     },
                   ),
                   const SizedBox(height: AppSpacing.xl),
