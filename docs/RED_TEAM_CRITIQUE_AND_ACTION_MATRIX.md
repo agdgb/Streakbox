@@ -11,7 +11,7 @@ This document systematically tracks all **12 Red-Team Attack Vectors**, their ps
 
 | # | Attack Vector & Existential Risk | Severity | Strategic & Technical Counter-Measure | Code Architecture / Target Module | Status |
 | :---: | :--- | :---: | :--- | :--- | :---: |
-| **1** | **"It's just another habit tracker"** (Passive logging vs active behavioral coaching) | 🔴 **CRITICAL** | Behavioral Psychology Intervention Engine (Implementation Intentions, Vulnerability Warnings). | `lib/features/notifications/behavioral_engine.dart` | 🟡 **PLANNED (Phase 2)** |
+| **1** | **"It's just another habit tracker"** (Passive logging vs active behavioral coaching) | 🔴 **CRITICAL** | Behavioral Psychology Intervention Engine (Implementation Intentions, Vulnerability Warnings). | `lib/data/services/behavioral_coaching_engine.dart`, `lib/features/calendar/widgets/behavioral_coaching_banner.dart` | 🔒 **IMPLEMENTED & DEPLOYED** |
 | **2** | **"Streaks can become toxic"** (Missed day drops streak to 0 ➔ user abandons app) | 🔴 **CRITICAL** | **Dual-Metric Engine**: Consistency Score (e.g. `96%`) + **"Never Miss Twice" Recovery Protocol** + Grace Days. | `lib/state/calendar_providers.dart`, `lib/features/calendar/widgets/recovery_protocol_card.dart` | 🔒 **IMPLEMENTED & DEPLOYED** |
 | **3** | **"Monetization destroys retention"** (Intrusive ads & paywall fatigue kill habit loop) | 🔴 **CRITICAL** | **100% Ad-Free Core Loop Policy**. Daily check-in is sacred (zero friction, zero banners, zero interstitial popups). | `docs/PRODUCT_TIERING_AND_ROADMAP.md` | 🔒 **RESOLVED & LOCKED** |
 | **4** | **"PRO offering is backwards"** (Charging for themes instead of real problem solving) | 🟠 **HIGH** | Re-center PRO around **Intelligent Habit Coaching, Rhythm Insights, and Cloud Vault Sync**. | `lib/features/paywall/paywall_sheet.dart`, `lib/features/stats/smart_insights_card.dart` | 🟡 **IN PROGRESS** |
@@ -22,7 +22,7 @@ This document systematically tracks all **12 Red-Team Attack Vectors**, their ps
 | **9** | **"Onboarding is absent (Cold Start)"** (New user sees empty calendar and uninstalls) | 🔴 **CRITICAL** | **30-Second Fast-Track Onboarding**: Starter habit packs (🏃 Fitness, 📚 Focus, 💧 Health) + instant Day 1 check-in. | `lib/features/onboarding/onboarding_screen.dart` | 🔒 **IMPLEMENTED & DEPLOYED** |
 | **10** | **"Social Cards are vanity"** (App-centric cards fail; user-identity cards win) | 🟡 **MEDIUM** | **Identity-First Celebration Cards**: User's achievement is the hero (*"100 DAYS RUNNING — I DIDN'T QUIT"*); subtle app mark. | `lib/features/social_share/social_share_card.dart` | 🔒 **IMPLEMENTED & DEPLOYED** |
 | **11** | **"48-Hour Trial is too short"** (Habit formation takes weeks, not 2 days) | 🟡 **MEDIUM** | **Standard 7-Day Free Trial** on Annual Subscription alongside 1-tap instant feature test drive. | `lib/features/paywall/paywall_sheet.dart` | 🔒 **IMPLEMENTED & DEPLOYED** |
-| **12** | **"The real enemy is user abandonment"** (D7 / D30 dropoff in habit apps) | 🔴 **CRITICAL** | Comprehensive D7/D30 Anti-Churn Engine (Milestone unlocks, momentum boosters, habit anchoring). | Entire Streakbox Architecture | 🟡 **CONTINUOUS AUDIT** |
+| **12** | **"The real enemy is user abandonment"** (D7 / D30 dropoff in habit apps) | 🔴 **CRITICAL** | Comprehensive D7/D30 Anti-Churn Engine (Milestone unlocks, momentum boosters, habit anchoring). | Entire Streakbox Architecture | 🔒 **IMPLEMENTED & DEPLOYED** |
 
 ---
 
