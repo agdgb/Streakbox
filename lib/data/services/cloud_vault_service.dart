@@ -70,10 +70,17 @@ class CloudVaultService {
     String jsonString, {
     bool overwriteExisting = false,
   }) async {
-    final Map<String, dynamic> data = jsonDecode(jsonString);
+    final dynamic decoded = jsonDecode(jsonString);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Invalid backup payload format');
+    }
 
-    final rawHabits = data['habits'] as List<dynamic>? ?? [];
-    final rawEntries = data['entries'] as List<dynamic>? ?? [];
+    if (!decoded.containsKey('habits') && !decoded.containsKey('entries')) {
+      throw const FormatException('Invalid Streakbox backup schema: missing habits or entries');
+    }
+
+    final rawHabits = decoded['habits'] as List<dynamic>? ?? [];
+    final rawEntries = decoded['entries'] as List<dynamic>? ?? [];
 
     int habitsCount = 0;
     int entriesCount = 0;
