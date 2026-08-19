@@ -148,6 +148,7 @@ class CalendarScreen extends ConsumerWidget {
                             context,
                             title: 'Consistency',
                             value: consistency.formattedPercentage,
+                            subtitle: '${consistency.completedDays}/${consistency.totalDays} planned',
                             icon: Icons.shield_rounded,
                             accentColor: const Color(0xFF10B981),
                           ),
@@ -259,6 +260,7 @@ class CalendarScreen extends ConsumerWidget {
     BuildContext context, {
     required String title,
     required String value,
+    String? subtitle,
     required IconData icon,
     required Color accentColor,
   }) {
@@ -279,6 +281,18 @@ class CalendarScreen extends ConsumerWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: AppTextStyles.caption(context).copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ],
     );
   }
