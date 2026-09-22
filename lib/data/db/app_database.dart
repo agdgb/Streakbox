@@ -12,7 +12,7 @@ class AppDatabase {
   sqflite.Database? _db;
   final bool _isInMemory;
 
-  AppDatabase._({this._isInMemory = false});
+  AppDatabase._({bool isInMemory = false}) : _isInMemory = isInMemory;
 
   /// Default singleton instance for application use.
   static AppDatabase get instance => _instance ??= AppDatabase._();

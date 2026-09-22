@@ -8,6 +8,8 @@ import 'package:streakbox/data/repositories/in_memory_habit_repository.dart';
 import 'package:streakbox/features/calendar/calendar_screen.dart';
 import 'package:streakbox/state/calendar_providers.dart';
 import 'package:streakbox/state/repository_provider.dart';
+import 'package:streakbox/state/auth_provider.dart';
+import 'package:streakbox/data/repositories/fake_auth_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +25,7 @@ void main() {
     return ProviderScope(
       overrides: [
         habitRepositoryProvider.overrideWithValue(repository),
+          authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
       ],
       child: const MaterialApp(
         home: CalendarScreen(),
@@ -90,6 +93,7 @@ void main() {
       ProviderScope(
         overrides: [
           habitRepositoryProvider.overrideWithValue(repository),
+          authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
         ],
         child: Consumer(
           builder: (context, ref, _) {

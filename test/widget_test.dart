@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:streakbox/app.dart';
+import 'package:streakbox/state/auth_provider.dart';
+import 'package:streakbox/data/repositories/fake_auth_repository.dart';
 import 'package:streakbox/data/db/app_database.dart';
 import 'package:streakbox/data/repositories/habit_repository.dart';
 import 'package:streakbox/state/repository_provider.dart';
@@ -31,6 +33,7 @@ void main() {
       ProviderScope(
         overrides: [
           habitRepositoryProvider.overrideWithValue(repository),
+          authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
         ],
         child: const StreakboxApp(),
       ),
