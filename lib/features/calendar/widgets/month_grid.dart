@@ -83,12 +83,15 @@ class _MonthGridWidgetState extends ConsumerState<MonthGridWidget> {
       }
     }
 
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final gridHeight = isLandscape ? 260.0 : 290.0;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         const WeekdayHeader(),
         SizedBox(
-          height: 290,
+          height: gridHeight,
           child: PageView.builder(
             controller: _pageController,
             physics: const BouncingScrollPhysics(),

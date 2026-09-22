@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart' as sqflite;
 
 /// Database manager for SQLite persistence across Web, Mobile, Desktop, and Tests.
 class AppDatabase {
@@ -9,7 +9,7 @@ class AppDatabase {
   static const int _databaseVersion = 1;
 
   static AppDatabase? _instance;
-  Database? _db;
+  sqflite.Database? _db;
   final bool _isInMemory;
 
   AppDatabase._({this._isInMemory = false});
@@ -21,7 +21,7 @@ class AppDatabase {
   static AppDatabase inMemory() => AppDatabase._(isInMemory: true);
 
   /// Returns the open database instance, initializing it if needed.
-  Future<Database> get database async {
+  Future<sqflite.Database> get database async {
     if (_db != null && _db!.isOpen) {
       return _db!;
     }
@@ -29,25 +29,21 @@ class AppDatabase {
     return _db!;
   }
 
-  Future<Database> _initDatabase() async {
-    Database db;
+  Future<sqflite.Database> _initDatabase() async {
+    sqflite.Database db;
     if (_isInMemory || kIsWeb) {
-      db = await databaseFactory.openDatabase(
-        inMemoryDatabasePath,
-        options: OpenDatabaseOptions(
-          version: _databaseVersion,
-          onCreate: _onCreate,
-        ),
+      db = await sqflite.openDatabase(
+        sqflite.inMemoryDatabasePath,
+        version: _databaseVersion,
+        onCreate: _onCreate,
       );
     } else {
       final dbPath = await _resolveDatabasePath();
-      db = await databaseFactory.openDatabase(
+      db = await sqflite.openDatabase(
         dbPath,
-        options: OpenDatabaseOptions(
-          version: _databaseVersion,
-          onCreate: _onCreate,
-          onConfigure: _onConfigure,
-        ),
+        version: _databaseVersion,
+        onCreate: _onCreate,
+        onConfigure: _onConfigure,
       );
     }
 
@@ -66,21 +62,21 @@ class AppDatabase {
       final appSupportDir = await getApplicationSupportDirectory();
       return p.join(appSupportDir.path, 'Streakbox', _databaseName);
     }
-    final documentsDirectory = await getDatabasesPath();
+    final documentsDirectory = await sqflite.getDatabasesPath();
     return p.join(documentsDirectory, _databaseName);
   }
 
-  static Future<void> _onConfigure(Database db) async {
+  static Future<void> _onConfigure(sqflite.Database db) async {
     if (!kIsWeb) {
       await db.execute('PRAGMA foreign_keys = ON');
     }
   }
 
-  static Future<void> _onCreate(Database db, int version) async {
+  static Future<void> _onCreate(sqflite.Database db, int version) async {
     await _createTables(db);
   }
 
-  static Future<void> _createTables(Database db) async {
+  static Future<void> _createTables(sqflite.Database db) async {
     // Table: habits
     await db.execute('''
       CREATE TABLE IF NOT EXISTS habits (
@@ -119,6 +115,14 @@ class AppDatabase {
         notes TEXT DEFAULT '',
         FOREIGN KEY (habit_id) REFERENCES habits (id) ON DELETE CASCADE,
         UNIQUE (habit_id, date)
+      )
+    ''');
+
+    // Table: settings
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
       )
     ''');
 

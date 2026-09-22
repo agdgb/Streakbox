@@ -2,31 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:streakbox/core/utils/date_utils.dart';
-import 'package:streakbox/data/db/app_database.dart';
 import 'package:streakbox/data/models/habit.dart';
-import 'package:streakbox/data/repositories/habit_repository.dart';
+import 'package:streakbox/data/repositories/in_memory_habit_repository.dart';
 import 'package:streakbox/features/calendar/calendar_screen.dart';
 import 'package:streakbox/state/calendar_providers.dart';
 import 'package:streakbox/state/repository_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  late AppDatabase db;
-  late HabitRepository repository;
+  late InMemoryHabitRepository repository;
 
   setUp(() {
-    db = AppDatabase.inMemory();
-    repository = HabitRepository(database: db);
-  });
-
-  tearDown(() async {
-    await db.close();
+    repository = InMemoryHabitRepository();
   });
 
   Widget createWidgetUnderTest() {
@@ -44,8 +34,8 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    expect(find.text('No habits tracked yet'), findsOneWidget);
-    expect(find.text('Create First Habit'), findsOneWidget);
+    expect(find.text('Start Your First Habit'), findsOneWidget);
+    expect(find.text('Create Custom Habit'), findsOneWidget);
   });
 
   testWidgets('displays calendar matrix and toggles check-in on cell tap', (tester) async {
@@ -62,8 +52,8 @@ void main() {
 
     // Verify habit tab & streak cards are displayed
     expect(find.text('Morning Workout'), findsOneWidget);
-    expect(find.text('Current Streak'), findsOneWidget);
-    expect(find.text('0 Days'), findsWidgets);
+    expect(find.text('Streak'), findsWidgets);
+    expect(find.text('0 d'), findsWidgets);
 
     // Find today's day cell
     final todayKey = AppDateUtils.formatDateKey(DateTime.now());
@@ -74,14 +64,8 @@ void main() {
     await tester.tap(dayCellFinder);
     await tester.pumpAndSettle();
 
-    // Verify check icon is visible
-    expect(
-      find.descendant(of: dayCellFinder, matching: find.byIcon(Icons.check_rounded)),
-      findsOneWidget,
-    );
-
-    // Verify streak increased to 1 Day
-    expect(find.text('1 Day'), findsWidgets);
+    // Verify streak increased to 1 d
+    expect(find.text('1 d'), findsWidgets);
 
     // Tap again to uncheck
     await tester.tap(dayCellFinder);

@@ -4,7 +4,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_text_styles.dart';
 
-/// Navigation shell wrapping the persistent bottom navigation bar.
+/// Navigation shell wrapping the persistent bottom navigation bar across all orientations.
 class NavShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -25,6 +25,7 @@ class NavShell extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: navigationShell,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -39,7 +40,7 @@ class NavShell extends StatelessWidget {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
+              horizontal: AppSpacing.lg,
               vertical: AppSpacing.xs + 2,
             ),
             child: Row(
@@ -89,7 +90,7 @@ class NavShell extends StatelessWidget {
       borderRadius: AppSpacing.roundedFull,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.12)
@@ -104,7 +105,9 @@ class NavShell extends StatelessWidget {
               size: 22,
               color: isSelected
                   ? AppColors.primary
-                  : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                  : (isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary),
             ),
             if (isSelected) ...[
               const SizedBox(width: 8),
@@ -114,7 +117,9 @@ class NavShell extends StatelessWidget {
                   context,
                   color: isSelected
                       ? AppColors.primary
-                      : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                      : (isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary),
                 ),
               ),
             ],

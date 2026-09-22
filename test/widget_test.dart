@@ -56,7 +56,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Settings screen is active
-    expect(find.text('Settings & Preferences'), findsOneWidget);
+    expect(find.text('Settings & Vault'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
   });
 }

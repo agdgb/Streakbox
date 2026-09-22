@@ -39,6 +39,11 @@ void main() {
   }
 
   testWidgets('HabitFormSheet creates a new habit when filled and saved', (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final repo = InMemoryHabitRepository();
 
     await tester.pumpWidget(buildTestableApp(repository: repo));
@@ -64,6 +69,11 @@ void main() {
   });
 
   testWidgets('HabitFormSheet validates empty habit name', (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final repo = InMemoryHabitRepository();
 
     await tester.pumpWidget(buildTestableApp(repository: repo));
@@ -81,6 +91,11 @@ void main() {
   });
 
   testWidgets('HabitFormSheet edits an existing habit', (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final repo = InMemoryHabitRepository();
     final existing = Habit(
       id: 'h1',
@@ -96,8 +111,8 @@ void main() {
 
     expect(find.text('Edit Habit'), findsOneWidget);
     expect(find.text('Save Changes'), findsOneWidget);
-    expect(find.text('Archive'), findsOneWidget);
-    expect(find.text('Delete'), findsOneWidget);
+    expect(find.text('Archive Habit'), findsOneWidget);
+    expect(find.text('Delete Habit'), findsOneWidget);
 
     // Change name
     await tester.enterText(find.byType(TextFormField).first, 'Deep Reading');
@@ -131,7 +146,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Delete Habit?'), findsOneWidget);
-    expect(find.textContaining('Running'), findsOneWidget);
+    expect(find.byType(ConfirmDeleteDialog), findsOneWidget);
 
     // Cancel
     await tester.tap(find.text('Cancel'));

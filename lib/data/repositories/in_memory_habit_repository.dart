@@ -8,8 +8,39 @@ import 'habit_repository.dart';
 class InMemoryHabitRepository implements HabitRepository {
   final Map<String, Habit> _habits = {};
   final Map<String, HabitEntry> _entries = {}; // key: "${habitId}_${dateKey}"
+  final Map<String, String> _settings = {};
 
   InMemoryHabitRepository();
+
+  @override
+  Future<String?> getSetting(String key) async => _settings[key];
+
+  @override
+  Future<void> saveSetting(String key, String value) async {
+    _settings[key] = value;
+  }
+
+  @override
+  Future<int?> getSettingInt(String key) async {
+    final val = _settings[key];
+    return val != null ? int.tryParse(val) : null;
+  }
+
+  @override
+  Future<void> saveSettingInt(String key, int value) async {
+    _settings[key] = value.toString();
+  }
+
+  @override
+  Future<bool?> getSettingBool(String key) async {
+    final val = _settings[key];
+    return val != null ? (val == '1' || val == 'true') : null;
+  }
+
+  @override
+  Future<void> saveSettingBool(String key, bool value) async {
+    _settings[key] = value ? '1' : '0';
+  }
 
   @override
   Future<List<Habit>> getActiveHabits() async {

@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../data/repositories/habit_repository.dart';
 import '../data/repositories/in_memory_habit_repository.dart';
@@ -10,9 +9,6 @@ import 'app.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Prevent background HTTP font requests when device is offline or on local hotspot
-  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Initialize SQLite desktop factory on desktop platforms
   if (!kIsWeb &&

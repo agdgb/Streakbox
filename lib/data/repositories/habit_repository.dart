@@ -3,6 +3,7 @@ import '../../core/utils/date_utils.dart';
 import '../db/app_database.dart';
 import '../db/entry_dao.dart';
 import '../db/habit_dao.dart';
+import '../db/settings_dao.dart';
 import '../models/habit.dart';
 import '../models/habit_entry.dart';
 
@@ -10,13 +11,29 @@ import '../models/habit_entry.dart';
 class HabitRepository {
   final HabitDao _habitDao;
   final EntryDao _entryDao;
+  final SettingsDao _settingsDao;
 
   HabitRepository({
     HabitDao? habitDao,
     EntryDao? entryDao,
+    SettingsDao? settingsDao,
     AppDatabase? database,
   })  : _habitDao = habitDao ?? HabitDao(database),
-        _entryDao = entryDao ?? EntryDao(database);
+        _entryDao = entryDao ?? EntryDao(database),
+        _settingsDao = settingsDao ?? SettingsDao(database);
+
+  // ---------------------------------------------------------------------------
+  // Settings Operations
+  // ---------------------------------------------------------------------------
+
+  Future<String?> getSetting(String key) => _settingsDao.getSetting(key);
+  Future<void> saveSetting(String key, String value) => _settingsDao.setSetting(key, value);
+
+  Future<int?> getSettingInt(String key) => _settingsDao.getInt(key);
+  Future<void> saveSettingInt(String key, int value) => _settingsDao.setInt(key, value);
+
+  Future<bool?> getSettingBool(String key) => _settingsDao.getBool(key);
+  Future<void> saveSettingBool(String key, bool value) => _settingsDao.setBool(key, value);
 
   // ---------------------------------------------------------------------------
   // Habit Operations
