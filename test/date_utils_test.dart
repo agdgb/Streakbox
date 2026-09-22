@@ -174,7 +174,7 @@ void main() {
         DateTime(2026, 8, 1),
         DateTime(2026, 8, 4),
       );
-      expect(rate, 100.0);
+      expect(rate, 1.0);
     });
 
     test('calculates 50% when half days in range are checked', () {
@@ -184,7 +184,7 @@ void main() {
         DateTime(2026, 8, 1),
         DateTime(2026, 8, 4),
       );
-      expect(rate, 50.0);
+      expect(rate, 0.5);
     });
 
     test('returns 0% when no days in range are checked', () {
