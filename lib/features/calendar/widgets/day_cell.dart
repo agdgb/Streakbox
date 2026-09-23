@@ -188,9 +188,7 @@ class DayCellWidget extends StatelessWidget {
         'Day ${cell.dayNumber}${cell.isToday ? ", Today" : ""}${isChecked ? ", Completed" : ", Not completed"}${isFuture ? ", Future date" : ""}';
 
     // Base cell content
-    Widget cellContent = AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOutCubic,
+    Widget cellContent = Container(
       decoration: decoration,
       child: Stack(
         alignment: Alignment.center,
@@ -204,47 +202,33 @@ class DayCellWidget extends StatelessWidget {
                   emoji!,
                   style: const TextStyle(fontSize: 12),
                 )
-                    .animate()
-                    .scale(
-                      begin: const Offset(0.6, 0.6),
-                      end: const Offset(1.0, 1.0),
-                      duration: 150.ms,
-                      curve: Curves.easeOutBack,
-                    )
               else if (isChecked)
                 (defaultCheckSymbol == '✓' || defaultCheckSymbol == '✔️'
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: checkColor,
+                        size: 15,
+                      )
+                    : (defaultCheckSymbol == '❌'
                         ? Icon(
-                            Icons.check_rounded,
-                            color: checkColor,
+                            Icons.close_rounded,
+                            color: (cell.isToday && themePreset.activePillGradient != null) ||
+                                    fillStyle == CalendarFillStyle.solidFill
+                                ? Colors.white
+                                : AppColors.error,
                             size: 15,
                           )
-                        : (defaultCheckSymbol == '❌'
-                            ? Icon(
-                                Icons.close_rounded,
-                                color: (cell.isToday && themePreset.activePillGradient != null) ||
-                                        fillStyle == CalendarFillStyle.solidFill
-                                    ? Colors.white
-                                    : AppColors.error,
-                                size: 15,
-                              )
-                            : Text(
-                                defaultCheckSymbol,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: (cell.isToday && themePreset.activePillGradient != null) ||
-                                          fillStyle == CalendarFillStyle.solidFill
-                                      ? Colors.white
-                                      : null,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              )))
-                    .animate()
-                    .scale(
-                      begin: const Offset(0.6, 0.6),
-                      end: const Offset(1.0, 1.0),
-                      duration: 150.ms,
-                      curve: Curves.easeOutBack,
-                    ),
+                        : Text(
+                            defaultCheckSymbol,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: (cell.isToday && themePreset.activePillGradient != null) ||
+                                      fillStyle == CalendarFillStyle.solidFill
+                                  ? Colors.white
+                                  : null,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ))),
               Text(
                 '${cell.dayNumber}',
                 style: AppTextStyles.calendarDay(

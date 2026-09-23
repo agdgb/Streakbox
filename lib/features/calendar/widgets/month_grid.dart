@@ -55,7 +55,6 @@ class _MonthGridWidgetState extends ConsumerState<MonthGridWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final activeDate = ref.watch(calendarDateProvider);
     final selectedHabit = ref.watch(selectedHabitProvider);
     final entriesAsync = ref.watch(selectedHabitEntriesProvider);
     final entryMapAsync = ref.watch(selectedHabitEntryMapProvider);
@@ -67,21 +66,24 @@ class _MonthGridWidgetState extends ConsumerState<MonthGridWidget> {
     final entryMap = entryMapAsync.asData?.value ?? {};
     final habitColor = selectedHabit?.color ?? AppColors.primary;
 
-    // Sync PageController if activeDate was changed externally (header chevron, Today jump, or habit tab switch)
-    final targetPage = monthToPageIndex(activeDate, _referenceMonth);
-    if (_pageController.hasClients && _currentPage != targetPage) {
-      _currentPage = targetPage;
-      final pageDiff = (_pageController.page?.round() ?? _currentPage) - targetPage;
-      if (pageDiff.abs() == 1) {
-        _pageController.animateToPage(
-          targetPage,
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-        );
-      } else {
-        _pageController.jumpToPage(targetPage);
+    // Listen to external date changes (header chevron, Today jump, or habit tab switch)
+    // without triggering animation side effects inside build() during user swipe gestures
+    ref.listen<DateTime>(calendarDateProvider, (previous, next) {
+      final targetPage = monthToPageIndex(next, _referenceMonth);
+      if (_pageController.hasClients && _currentPage != targetPage) {
+        _currentPage = targetPage;
+        final pageDiff = (_pageController.page?.round() ?? _currentPage) - targetPage;
+        if (pageDiff.abs() == 1) {
+          _pageController.animateToPage(
+            targetPage,
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+          );
+        } else {
+          _pageController.jumpToPage(targetPage);
+        }
       }
-    }
+    });
 
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final gridHeight = isLandscape ? 260.0 : 290.0;
@@ -96,6 +98,7 @@ class _MonthGridWidgetState extends ConsumerState<MonthGridWidget> {
             controller: _pageController,
             physics: const BouncingScrollPhysics(),
             onPageChanged: (pageIndex) {
+              if (_currentPage == pageIndex) return;
               _currentPage = pageIndex;
               final newMonth = pageIndexToMonth(pageIndex, _referenceMonth);
               if (selectedHabit != null) {
