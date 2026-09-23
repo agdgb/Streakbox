@@ -732,10 +732,18 @@ class CalendarScreen extends ConsumerWidget {
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 16, color: accentColor),
             const SizedBox(width: 4),
-            Text(title, style: AppTextStyles.bodySmall(context)),
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodySmall(context),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 4),

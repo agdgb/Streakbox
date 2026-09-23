@@ -120,12 +120,16 @@ class BehavioralCoachingBanner extends ConsumerWidget {
                     children: [
                       const Icon(Icons.check_rounded, size: 14, color: Colors.black),
                       const SizedBox(width: 4),
-                      Text(
-                        nudge.actionableButtonLabel,
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.black,
+                      Flexible(
+                        child: Text(
+                          nudge.actionableButtonLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ],

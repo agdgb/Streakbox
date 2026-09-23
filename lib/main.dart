@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,8 +8,15 @@ import '../data/repositories/in_memory_habit_repository.dart';
 import '../state/repository_provider.dart';
 import 'app.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase (gracefully catches if offline or test environment)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase init notice: $e');
+  }
 
   // Initialize SQLite desktop factory on desktop platforms
   if (!kIsWeb &&

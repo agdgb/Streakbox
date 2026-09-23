@@ -38,7 +38,8 @@ void main() {
         child: const StreakboxApp(),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     // Verify initial Calendar tab state
     expect(find.text('Streakbox'), findsOneWidget);
@@ -48,7 +49,8 @@ void main() {
 
     // Tap Analytics tab
     await tester.tap(find.byIcon(Icons.insights_outlined));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     // Verify Analytics screen is active
     expect(find.text('Analytics & Overview'), findsOneWidget);
@@ -56,7 +58,8 @@ void main() {
 
     // Tap Settings tab
     await tester.tap(find.byIcon(Icons.settings_outlined));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     // Verify Settings screen is active
     expect(find.text('Settings & Vault'), findsOneWidget);

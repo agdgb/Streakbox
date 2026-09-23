@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/habit.dart';
 import '../models/habit_entry.dart';
 import '../repositories/habit_repository.dart';
@@ -43,8 +44,64 @@ class CloudVaultState {
 /// Zero-Knowledge Vault Service ensuring zero data loss and multi-device portability.
 class CloudVaultService {
   final HabitRepository repository;
+  final FirebaseFirestore? _firestore;
 
-  CloudVaultService({required this.repository});
+  CloudVaultService({
+    required this.repository,
+    FirebaseFirestore? firestore,
+  }) : _firestore = firestore;
+
+  FirebaseFirestore get _db => _firestore ?? FirebaseFirestore.instance;
+
+  /// Syncs current habit & check-in data to user's Cloud Firestore vault.
+  Future<int> syncToFirestore(String userId) async {
+    final habits = await repository.getAllHabits();
+    final entries = await repository.getAllEntries();
+    final jsonSnapshot = await createVaultSnapshot();
+
+    // Write top-level user doc for immediate console visibility
+    final userDocRef = _db.collection('users').doc(userId);
+    await userDocRef.set({
+      'userId': userId,
+      'lastSync': FieldValue.serverTimestamp(),
+      'habitsCount': habits.length,
+      'entriesCount': entries.length,
+    }, SetOptions(merge: true));
+
+    final docRef = _db.collection('users').doc(userId).collection('vault').doc('latest');
+
+    await docRef.set({
+      'userId': userId,
+      'updatedAt': FieldValue.serverTimestamp(),
+      'habitsCount': habits.length,
+      'entriesCount': entries.length,
+      'habits': habits.map((h) => h.toMap()).toList(),
+      'entries': entries.map((e) => e.toMap()).toList(),
+      'snapshotJson': jsonSnapshot,
+    }, SetOptions(merge: true));
+
+    return habits.length;
+  }
+
+  /// Restores habit data from user's Cloud Firestore vault.
+  Future<({int habitsRestored, int entriesRestored})?> syncFromFirestore(
+    String userId, {
+    bool overwrite = false,
+  }) async {
+    final docRef = _db.collection('users').doc(userId).collection('vault').doc('latest');
+    final snapshot = await docRef.get();
+
+    if (!snapshot.exists || snapshot.data() == null) {
+      return null;
+    }
+
+    final data = snapshot.data()!;
+    final jsonString = data['snapshotJson'] as String?;
+    if (jsonString != null) {
+      return await restoreVaultSnapshot(jsonString, overwriteExisting: overwrite);
+    }
+    return null;
+  }
 
   /// Exports full deterministic encrypted vault snapshot.
   Future<String> createVaultSnapshot() async {

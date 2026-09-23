@@ -60,6 +60,48 @@ class CloudVaultNotifier extends Notifier<CloudVaultState> {
       rethrow;
     }
   }
+
+  Future<int> syncToCloud(String userId) async {
+    state = state.copyWith(isSyncing: true, lastError: null);
+    try {
+      final service = ref.read(cloudVaultServiceProvider);
+      final count = await service.syncToFirestore(userId);
+      state = state.copyWith(
+        isSyncing: false,
+        lastBackupTime: DateTime.now(),
+        totalHabitsBackedUp: count,
+      );
+      return count;
+    } catch (e) {
+      state = state.copyWith(isSyncing: false, lastError: e.toString());
+      rethrow;
+    }
+  }
+
+  Future<({int habitsRestored, int entriesRestored})?> syncFromCloud(
+    String userId, {
+    bool overwrite = false,
+  }) async {
+    state = state.copyWith(isSyncing: true, lastError: null);
+    try {
+      final service = ref.read(cloudVaultServiceProvider);
+      final result = await service.syncFromFirestore(userId, overwrite: overwrite);
+      if (result != null) {
+        state = state.copyWith(
+          isSyncing: false,
+          lastBackupTime: DateTime.now(),
+          totalHabitsBackedUp: result.habitsRestored,
+          totalEntriesBackedUp: result.entriesRestored,
+        );
+      } else {
+        state = state.copyWith(isSyncing: false);
+      }
+      return result;
+    } catch (e) {
+      state = state.copyWith(isSyncing: false, lastError: e.toString());
+      rethrow;
+    }
+  }
 }
 
 final cloudVaultProvider = NotifierProvider<CloudVaultNotifier, CloudVaultState>(

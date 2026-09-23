@@ -8,6 +8,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_theme_preset.dart';
+import '../../state/auth_provider.dart';
+import '../../state/cloud_vault_provider.dart';
 import '../../state/habit_providers.dart';
 import '../../state/pro_entitlement_provider.dart';
 import '../../state/repository_provider.dart';
@@ -450,6 +452,353 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     );
   }
 
+  Widget _buildAccountSection(
+    BuildContext context,
+    bool isDark,
+    AppThemePreset themePreset,
+  ) {
+    final authState = ref.watch(authStateProvider);
+    final user = authState.value;
+    final isGoogleUser = user != null && !user.isAnonymous;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isGoogleUser ? Icons.account_circle_rounded : Icons.person_outline_rounded,
+                color: themePreset.primaryColor,
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'ACCOUNT & CLOUD IDENTITY',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (isGoogleUser) ...[
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: themePreset.primaryColor.withValues(alpha: 0.2),
+                  backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
+                  child: user.photoURL == null
+                      ? Text(
+                          (user.displayName?.isNotEmpty ?? false)
+                              ? user.displayName![0].toUpperCase()
+                              : 'U',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: themePreset.primaryColor,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.displayName ?? 'Google User',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                      ),
+                      Text(
+                        user.email ?? '',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: () async {
+                    await ref.read(authNotifierProvider.notifier).signOut();
+                  },
+                  style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('Sign Out', style: TextStyle(fontSize: 12)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Divider(
+              height: 1,
+              color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
+            ),
+            const SizedBox(height: 14),
+            Consumer(
+              builder: (context, ref, _) {
+                final vaultState = ref.watch(cloudVaultProvider);
+                final isSyncing = vaultState.isSyncing;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.cloud_sync_rounded,
+                          size: 18,
+                          color: themePreset.primaryColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Cloud Firestore Vault',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (vaultState.lastBackupTime != null)
+                          Text(
+                            'Synced ${vaultState.lastBackupTime!.hour.toString().padLeft(2, '0')}:${vaultState.lastBackupTime!.minute.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? Colors.white54 : Colors.black54,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: isSyncing
+                                ? null
+                                : () async {
+                                    try {
+                                      final count = await ref
+                                          .read(cloudVaultProvider.notifier)
+                                          .syncToCloud(user.uid);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            backgroundColor: AppColors.primary,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius: AppSpacing.roundedMd),
+                                            content: Row(
+                                              children: [
+                                                const Icon(Icons.cloud_done_rounded,
+                                                    color: Colors.white, size: 20),
+                                                const SizedBox(width: 10),
+                                                Expanded(
+                                                  child: Text(
+                                                    'Uploaded $count habit(s) to Cloud Firestore!',
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            backgroundColor: AppColors.error,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius: AppSpacing.roundedMd),
+                                            content: Text('Sync failed: $e'),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                            icon: isSyncing
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.cloud_upload_rounded, size: 16),
+                            label: Text(
+                              isSyncing ? 'Syncing...' : 'Sync to Remote DB',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                            ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: themePreset.primaryColor,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        OutlinedButton.icon(
+                          onPressed: isSyncing
+                              ? null
+                              : () async {
+                                  try {
+                                    final res = await ref
+                                        .read(cloudVaultProvider.notifier)
+                                        .syncFromCloud(user.uid);
+                                    ref.invalidate(habitsProvider);
+                                    ref.invalidate(selectedHabitEntriesProvider);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: AppColors.primary,
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: AppSpacing.roundedMd),
+                                          content: Row(
+                                            children: [
+                                              const Icon(Icons.cloud_download_rounded,
+                                                  color: Colors.white, size: 20),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Text(
+                                                  res != null
+                                                      ? 'Restored ${res.habitsRestored} habit(s) from cloud!'
+                                                      : 'No cloud vault backup found for this account.',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: AppColors.error,
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: AppSpacing.roundedMd),
+                                          content: Text('Restore failed: $e'),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                          icon: const Icon(Icons.cloud_download_rounded, size: 16),
+                          label: const Text('Restore', style: TextStyle(fontSize: 12)),
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ] else ...[
+            Text(
+              'You are currently in local-first Guest Mode. Sign in with Google to link your encrypted Cloud Vault across devices.',
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.white60 : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Consumer(
+              builder: (context, ref, _) {
+                final authNotifierState = ref.watch(authNotifierProvider);
+                final isLoading = authNotifierState.isLoading;
+
+                return SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            try {
+                              await ref.read(authNotifierProvider.notifier).signInWithGoogle();
+                              final stateAfter = ref.read(authNotifierProvider);
+                              if (stateAfter.hasError && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppColors.error,
+                                    behavior: SnackBarBehavior.floating,
+                                    content: Text('Sign-in error: ${stateAfter.error}'),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppColors.error,
+                                    behavior: SnackBarBehavior.floating,
+                                    content: Text('Error: $e'),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                    icon: isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.login_rounded, size: 18),
+                    label: Text(
+                      isLoading ? 'Signing in...' : 'Sign In with Google',
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: themePreset.primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themePreset = ref.watch(themePresetProvider);
@@ -477,6 +826,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         children: [
           // 👑 Streakbox PRO Hero Upgrade Banner
           _buildProUpgradeHero(context, isDark, themePreset, proState),
+          const SizedBox(height: 16),
+
+          // 👤 Account & Cloud Identity Section
+          _buildAccountSection(context, isDark, themePreset),
           const SizedBox(height: 16),
 
           // 🛡️ Hero Privacy & Vault Card

@@ -22,7 +22,8 @@ class AuthNotifier extends Notifier<AsyncValue<User?>> {
     final authRepository = ref.read(authRepositoryProvider);
     state = const AsyncValue.loading();
     try {
-      await authRepository.signInAnonymously();
+      final credential = await authRepository.signInAnonymously();
+      state = AsyncValue.data(credential.user);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -32,7 +33,8 @@ class AuthNotifier extends Notifier<AsyncValue<User?>> {
     final authRepository = ref.read(authRepositoryProvider);
     state = const AsyncValue.loading();
     try {
-      await authRepository.signInWithGoogle();
+      final credential = await authRepository.signInWithGoogle();
+      state = AsyncValue.data(credential?.user ?? authRepository.currentUser);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -43,6 +45,7 @@ class AuthNotifier extends Notifier<AsyncValue<User?>> {
     state = const AsyncValue.loading();
     try {
       await authRepository.signOut();
+      state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }

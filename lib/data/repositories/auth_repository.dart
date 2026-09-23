@@ -17,19 +17,35 @@ class AuthRepository {
     return await _auth.signInAnonymously();
   }
 
+  static const String webClientId =
+      '783047478871-fs9fjkvd7le9rkpr3ekfdk5qfkmsij8q.apps.googleusercontent.com';
+
+  bool _initialized = false;
+
+  Future<void> _ensureInitialized() async {
+    if (!_initialized) {
+      try {
+        await _googleSignIn.initialize(
+          serverClientId: webClientId,
+        );
+        _initialized = true;
+      } catch (e) {
+        _initialized = true;
+      }
+    }
+  }
+
   Future<UserCredential?> signInWithGoogle() async {
     try {
+      await _ensureInitialized();
       final googleUser = await _googleSignIn.authenticate();
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-      final GoogleSignInClientAuthorization? googleAuthClient =
-          await googleUser.authorizationClient.authorizationForScopes(const <String>[]);
 
-      if (googleAuthClient == null) {
-          throw Exception('Failed to get Google Sign-In client authorization');
+      if (googleAuth.idToken == null) {
+        throw Exception('Failed to retrieve ID token from Google authentication.');
       }
 
       final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuthClient.accessToken,
         idToken: googleAuth.idToken,
       );
 
